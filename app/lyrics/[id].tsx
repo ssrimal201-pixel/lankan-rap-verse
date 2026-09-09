@@ -1,125 +1,152 @@
-import { BlurView } from "expo-blur";
-import * as Clipboard from "expo-clipboard";
-import * as Haptics from "expo-haptics";
-import { Image } from "expo-image";
-import { Stack, useLocalSearchParams } from "expo-router";
-import { Copy, Heart, HeartOff, Share as ShareIcon } from "lucide-react-native"; // ShareIcon එකතු කළා
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Share } from "react-native"; // Share එකතු කළා
-import { useLyrics } from "@/contexts/LyricsContext";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackground, Dimensions } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { supabase } from '../../lib/supabase';
+import { ArrowLeft, Mic } from 'lucide-react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export default function LyricsScreen() {
-  const params = useLocalSearchParams();
-  const { title, artistName, artistImage, lyrics } = params as {
-    title: string;
-    artistName: string;
-    artistImage: string;
-    lyrics: string;
-  };
+  const router = useRouter();
+  const { id, title: paramTitle, artistName: paramArtist } = useLocalSearchParams<{ 
+    id: string; 
+    title?: string; 
+    artistName?: string; 
+  }>();
 
-  const { saveLyric, removeLyric, isLyricSaved } = useLyrics();
-  const [copied, setCopied] = useState(false);
+  const [song, setSong] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const isSaved = isLyricSaved(title, artistName);
+  useEffect(() => {
+    if (id) {
+      fetchSongDetails();
+    }
+  }, [id]);
 
-  // --- Share Logic එක මෙන්න ---
-  const handleShare = async () => {
+  async function fetchSongDetails() {
+    setLoading(true);
     try {
-      await Share.share({
-        message: `🎶 ${title} - ${artistName}\n\n${lyrics}\n\nShared via Lankan Rap Verse`,
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+      // Supabase එකෙන් Song Details එක්ක Artistගේ Image එකත් එක්කම ගන්නවා
+      const { data, error } = await supabase
+        .from('songs')
+        .select('id, title, lyrics, artists(name, image)')
+        .eq('id', id)
+        .single();
 
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(lyrics);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleToggleSave = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (isSaved) {
-      removeLyric(title, artistName);
-    } else {
-      saveLyric({ songTitle: title, artistName, artistImage, lyrics });
+      if (error) {
+        console.log("Lyrics Fetch Error:", error);
+      } else if (data) {
+        setSong(data);
+      }
+    } catch (e) {
+      console.log("Error fetching lyrics:", e);
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  const songTitle = song?.title || (paramTitle ? decodeURIComponent(paramTitle) : 'Song Lyrics');
+  const artistName = song?.artists?.name || (paramArtist ? decodeURIComponent(paramArtist) : 'Artist');
+  const artistImage = song?.artists?.image;
+  const songLyrics = song?.lyrics || "මෙම ගීතයේ Lyrics තවම එකතු කර නොමැත.";
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: "",
-          headerTintColor: "#ffffff",
-        }}
-      />
+      {/* ARTIST BLURRED BACKGROUND */}
+      {artistImage ? (
+        <ImageBackground 
+          source={{ uri: artistImage }} 
+          style={styles.bgImage}
+          blurRadius={25} // Photo එක Blur වෙන ප්‍රමාණය
+        >
+          <View style={styles.darkOverlay} />
+        </ImageBackground>
+      ) : (
+        <View style={styles.defaultBg} />
+      )}
 
-      <Image 
-        source={{ uri: artistImage }} 
-        style={styles.backgroundImage} 
-        contentFit="cover" 
-        cachePolicy="disk" 
-      />
-      <BlurView intensity={85} tint="dark" style={styles.blurOverlay} />
-
-      <ScrollView 
-        style={styles.scrollView} 
-        showsVerticalScrollIndicator={false} 
-        contentContainerStyle={styles.content}
-      >
-        <View style={styles.header}>
-          <Text style={styles.songTitle} numberOfLines={2}>{title}</Text>
-          <Text style={styles.artistNameText}>{artistName}</Text>
+      {/* TOP HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <ArrowLeft color="#fff" size={24} />
+        </TouchableOpacity>
+        
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.songTitleHeader} numberOfLines={1}>{songTitle}</Text>
+          <Text style={styles.artistNameHeader} numberOfLines={1}>{artistName}</Text>
         </View>
 
-        <View style={styles.actionsRow}>
-          {/* Copy Button */}
-          <TouchableOpacity style={[styles.actionButton, copied && styles.actionButtonActive]} onPress={handleCopy}>
-            <Copy size={18} color={copied ? "#1DB954" : "#ffffff"} />
-            <Text style={[styles.actionButtonText, copied && styles.actionButtonTextActive]}>{copied ? "Copied" : "Copy"}</Text>
-          </TouchableOpacity>
+        {/* Karaoke Quick Button */}
+        <TouchableOpacity 
+          style={styles.karaokeBtn}
+          onPress={() => router.push(`/karaoke?songId=${id}&title=${encodeURIComponent(songTitle)}&lyrics=${encodeURIComponent(songLyrics)}`)}
+        >
+          <Mic size={20} color="#000" />
+        </TouchableOpacity>
+      </View>
 
-          {/* Share Button එක මෙන්න */}
-          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-            <ShareIcon size={18} color="#ffffff" />
-            <Text style={styles.actionButtonText}>Share</Text>
-          </TouchableOpacity>
-
-          {/* Save Button */}
-          <TouchableOpacity style={[styles.actionButton, isSaved && styles.actionButtonActive]} onPress={handleToggleSave}>
-            {isSaved ? <HeartOff size={18} color="#1DB954" /> : <Heart size={18} color="#ffffff" />}
-            <Text style={[styles.actionButtonText, isSaved && styles.actionButtonTextActive]}>{isSaved ? "Saved" : "Save"}</Text>
-          </TouchableOpacity>
+      {/* LYRICS CONTENT */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1DB954" />
+          <Text style={styles.loadingText}>Lyrics ලෝඩ් වෙනවා...</Text>
         </View>
-
-        <View style={styles.lyricsContainer}>
-          <Text style={styles.lyricsText}>{lyrics}</Text>
-        </View>
-      </ScrollView>
+      ) : (
+        <ScrollView style={styles.lyricsScroll} showsVerticalScrollIndicator={false}>
+          <Text style={styles.lyricsText}>{songLyrics}</Text>
+          <View style={{ height: 60 }} />
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000000" },
-  backgroundImage: { position: "absolute", width: "100%", height: "100%" },
-  blurOverlay: { ...StyleSheet.absoluteFillObject },
-  scrollView: { flex: 1 },
-  content: { paddingTop: 120, paddingBottom: 60, paddingHorizontal: 25 },
-  header: { marginBottom: 35, alignItems: "flex-start" },
-  songTitle: { fontSize: 42, fontWeight: "900", color: "#ffffff", marginBottom: 5, textShadowColor: "rgba(0, 0, 0, 0.9)", textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 },
-  artistNameText: { fontSize: 22, fontWeight: "600", color: "#1DB954" },
-  actionsRow: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 40 }, // Row එක flexWrap කළා ඉඩ මදි වුණොත් යටට යන්න
-  actionButton: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255, 255, 255, 0.12)", paddingVertical: 12, paddingHorizontal: 18, borderRadius: 30, gap: 8 },
-  actionButtonActive: { backgroundColor: "rgba(29, 185, 84, 0.2)" },
-  actionButtonText: { fontSize: 13, fontWeight: "700", color: "#ffffff" },
-  actionButtonTextActive: { color: "#1DB954" },
-  lyricsContainer: { paddingBottom: 20 },
-  lyricsText: { fontSize: 20, lineHeight: 34, color: "#ffffff", fontWeight: "500" },
+  container: { flex: 1, backgroundColor: '#000', paddingTop: 45, position: 'relative' },
+  bgImage: {
+    position: 'absolute',
+    width: width,
+    height: height,
+    top: 0,
+    left: 0,
+  },
+  darkOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)', // Blur Image එක උඩින් Dark Layer එකක් (Text කියවන්න ලේසි වෙන්න)
+  },
+  defaultBg: {
+    position: 'absolute',
+    width: width,
+    height: height,
+    backgroundColor: '#000',
+  },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 15, 
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    zIndex: 10,
+  },
+  backBtn: { backgroundColor: 'rgba(0, 0, 0, 0.5)', padding: 8, borderRadius: 20 },
+  headerTitleContainer: { flex: 1, marginHorizontal: 15, alignItems: 'center' },
+  songTitleHeader: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  artistNameHeader: { color: '#1DB954', fontSize: 13, marginTop: 2 },
+  karaokeBtn: { backgroundColor: '#00FFCC', padding: 8, borderRadius: 20 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  loadingText: { color: '#ccc', marginTop: 10, fontSize: 14 },
+  lyricsScroll: { flex: 1, paddingHorizontal: 20, paddingTop: 20, zIndex: 10 },
+  lyricsText: { 
+    color: '#FFFFFF', 
+    fontSize: 19, 
+    lineHeight: 34, 
+    textAlign: 'center', 
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)', // Text එක කැපී පෙනෙන්න Shadow එකක්
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
 });

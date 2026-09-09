@@ -1,28 +1,28 @@
 {
   "expo": {
-    "name": "Rap Music App",
-    "slug": "rap-music-app-y1t7g81",
+    "name": "Lankan Rap Verse",
+    "slug": "lankan-Rap-Verse",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rork-app",
-    "userInterfaceStyle": "automatic",
+    "scheme": "lankan-rap-verse",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a1a1a"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.rork.rap-music-app-y1t7g81"
+      "bundleIdentifier": "com.dilan.lankanrapverse"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1a1a1a"
       },
-      "package": "app.rork.rap_music_app_y1t7g81"
+      "package": "com.dilan.lankanrapverse"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -31,7 +31,7 @@
       [
         "expo-router",
         {
-          "origin": "https://rork.com/"
+          "origin": "https://lankanrapverse.com/"
         }
       ],
       "expo-font",
@@ -42,10 +42,10 @@
     },
     "extra": {
       "router": {
-        "origin": "https://rork.com/"
+        "origin": "https://lankanrapverse.com/"
       },
       "eas": {
-        "projectId": "73295609-fc76-4032-8c06-1637469028b7"
+        "projectId": "b97a309a-b5d8-4034-af45-36f40992a83a"
       }
     }
   }

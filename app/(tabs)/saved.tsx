@@ -1,13 +1,27 @@
 import { Image } from "expo-image";
-import { Link, Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router"; // useRouter එකතු කළා
 import { Heart, Music, Trash2 } from "lucide-react-native";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from "react-native";
 import { useLyrics } from "@/contexts/LyricsContext";
 
 export default function SavedScreen() {
-  // toggleSave වෙනුවට removeLyric ගත්තා
   const { savedLyrics, removeLyric } = useLyrics();
+  const router = useRouter(); // router එක initialize කළා
+
+  const handleNavigate = (song: any) => {
+    // pathname එක ඔයාගේ Folder එකේ නමට (lyrics/[id]) ගැලපෙන්න මෙතන තියෙනවා
+    router.push({
+      pathname: "/lyrics/[id]",
+      params: {
+        id: song.id || "offline", // ID එකක් නැත්නම් "offline" කියලා pass කරනවා crash නොවෙන්න
+        title: song.songTitle,
+        artistName: song.artistName,
+        artistImage: song.artistImage,
+        lyrics: song.lyrics,
+      },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -26,41 +40,30 @@ export default function SavedScreen() {
           {savedLyrics.length > 0 ? (
             savedLyrics.map((song, index) => (
               <View key={song.id || index} style={styles.songCardContainer}>
-                <Link
-                  href={{
-                    pathname: "/lyrics/[id]",
-                    params: {
-                      id: song.id || "", 
-                      title: song.songTitle, // songTitle ලෙස වෙනස් කළා
-                      artistName: song.artistName,
-                      artistImage: song.artistImage,
-                      lyrics: song.lyrics,
-                    },
-                  }}
-                  asChild
+                {/* Link වෙනුවට TouchableOpacity පාවිච්චි කරලා navigation එක handle කරනවා */}
+                <TouchableOpacity 
+                  style={styles.songCard} 
+                  activeOpacity={0.7}
+                  onPress={() => handleNavigate(song)}
                 >
-                  <TouchableOpacity style={styles.songCard} activeOpacity={0.7}>
-                    {/* No black border [cite: 2026-01-02] */}
-                    <Image source={{ uri: song.artistImage }} style={styles.songImage} contentFit="cover" />
-                    <View style={styles.songInfo}>
-                      <Text style={styles.songTitle} numberOfLines={1}>{song.songTitle}</Text>
-                      <Text style={styles.songArtist} numberOfLines={1}>{song.artistName}</Text>
-                    </View>
-                  </TouchableOpacity>
-                </Link>
+                  <Image source={{ uri: song.artistImage }} style={styles.songImage} contentFit="cover" />
+                  <View style={styles.songInfo}>
+                    <Text style={styles.songTitle} numberOfLines={1}>{song.songTitle}</Text>
+                    <Text style={styles.songArtist} numberOfLines={1}>{song.artistName}</Text>
+                  </View>
+                </TouchableOpacity>
                 
-                {/* Remove කරන්න removeLyric පාවිච්චි කරනවා */}
                 <TouchableOpacity 
                   onPress={() => removeLyric(song.songTitle, song.artistName)} 
                   style={styles.removeBtn}
                 >
-                  <Trash2 size={20} color="#333" />
+                  <Trash2 size={20} color="#444" />
                 </TouchableOpacity>
               </View>
             ))
           ) : (
             <View style={styles.emptyContainer}>
-              <Music size={50} color="#111" />
+              <Music size={50} color="#222" />
               <Text style={styles.emptyText}>No Offline Songs</Text>
             </View>
           )}
