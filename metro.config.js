@@ -1,6 +1,9 @@
-const { getDefaultConfig } = require("expo/metro-config");
-const { withRorkMetro } = require("@rork-ai/toolkit-sdk/metro");
+const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withRorkMetro(config);
+config.resolver.alias = {
+  'zod/v4': 'zod',
+};
+
+module.exports = config;
