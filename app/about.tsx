@@ -1,70 +1,64 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Linking, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Info, Mail, ShieldCheck, ChevronLeft } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Search, Info } from 'lucide-react-native';
+import rapData from '../data/rapVerses.json';
 
-export default function AboutScreen() {
+export default function HomeScreen() {
   const router = useRouter();
-  const currentYear = new Date().getFullYear();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter songs based on search
+  const filteredTracks = rapData.filter(
+    (track) =>
+      track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      track.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* උඩ තියෙන Default Header එක අයින් කළා */}
-      <Stack.Screen options={{ headerShown: false }} />
-
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
-        {/* Custom Back Button */}
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-        >
-          <ChevronLeft size={32} color="#1DB954" />
-        </TouchableOpacity>
-
-        {/* App Branding */}
-        <View style={styles.headerSection}>
+        {/* Header Section */}
+        <View style={styles.header}>
           <Text style={styles.appName}>Lankan Rap Verse</Text>
-          <Text style={styles.version}>Version 1.0.0</Text>
-        </View>
-
-        {/* About Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Info size={20} color="#1DB954" />
-            <Text style={styles.sectionTitle}>අප ගැන</Text>
-          </View>
-          <Text style={styles.description}>
-            Lankan Rap Verse යනු ශ්‍රී ලාංකීය රැප් සංගීත ලෝලීන් සඳහාම වෙන්වූ ඇප් එකකි. 
-            ඔබ ප්‍රියකරන සියලුම රැප් ශිල්පීන්ගේ සින්දු සහ පද පේළි දැන් එකම තැනකින් ලබාගත හැක.
-          </Text>
-        </View>
-
-        {/* Copyright Disclaimer */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ShieldCheck size={20} color="#1DB954" />
-            <Text style={styles.sectionTitle}>Copyright Disclaimer</Text>
-          </View>
-          <Text style={styles.disclaimer}>
-            මෙහි අන්තර්ගත සියලුම පද පේළි සහ ඡායාරූප ඒවාහි මුල් නිර්මාණකරුවන් සතු වේ. 
-            යම් නිර්මාණකරුවෙකු තම නිර්මාණ මෙහි ප්‍රදර්ශනය කිරීමට අකමැති නම්, කරුණාකර අපව සම්බන්ධ කරගන්න. 
-            අප වහාම ඒවා ඉවත් කිරීමට කටයුතු කරන්නෙමු.
-          </Text>
-        </View>
-
-        {/* Contact Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Mail size={20} color="#1DB954" />
-            <Text style={styles.sectionTitle}>සම්බන්ධ වීමට</Text>
-          </View>
-          <TouchableOpacity onPress={() => Linking.openURL('mailto:support@lankanrapverse.com')}>
-            <Text style={styles.emailText}>ssrimal201@gmail.com</Text>
+          <TouchableOpacity style={styles.infoButton} onPress={() => router.push('/about')}>
+            <Info size={22} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.footerText}>© {currentYear} Lankan Rap Verse</Text>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Search size={20} color="#666" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search Artists or Songs..."
+            placeholderTextColor="#666"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        {/* Featured Tracks Section */}
+        <Text style={styles.sectionTitle}>Featured Tracks</Text>
+
+        <View style={styles.trackList}>
+          {filteredTracks.map((track) => (
+            <TouchableOpacity
+              key={track.id}
+              style={styles.trackCard}
+              onPress={() => router.push('/studio')} // Lyrics View Screen එකට Navigation එක
+              activeOpacity={0.7}
+            >
+              <Image source={{ uri: track.image || 'https://via.placeholder.com/150' }} style={styles.trackImage} />
+              <View style={styles.trackInfo}>
+                <Text style={styles.trackTitle}>{track.title}</Text>
+                <Text style={styles.trackArtist}>{track.artist}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -72,25 +66,18 @@ export default function AboutScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  content: { padding: 25 },
-  backButton: {
-    width: 45,
-    height: 45,
-    backgroundColor: '#111',
-    borderRadius: 22.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    marginTop: 10
-  },
-  headerSection: { alignItems: 'center', marginBottom: 40 },
-  appName: { color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: 1 },
-  version: { color: '#1DB954', fontSize: 14, fontWeight: '600', marginTop: 5 },
-  section: { backgroundColor: '#111', padding: 20, borderRadius: 20, marginBottom: 20 },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 10 },
-  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  description: { color: '#eee', fontSize: 15, lineHeight: 24 },
-  disclaimer: { color: '#aaa', fontSize: 13, lineHeight: 20 },
-  emailText: { color: '#1DB954', fontSize: 16, fontWeight: '600', marginTop: 5, textDecorationLine: 'underline' },
-  footerText: { color: '#333', textAlign: 'center', marginTop: 30, fontSize: 12, fontWeight: 'bold' }
+  content: { padding: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, marginTop: 10 },
+  appName: { color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: 0.5 },
+  infoButton: { width: 40, height: 40, backgroundColor: '#111', borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#111', borderRadius: 15, paddingHorizontal: 15, height: 50, marginBottom: 25 },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, color: '#fff', fontSize: 16 },
+  sectionTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
+  trackList: { gap: 12 },
+  trackCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#111', padding: 12, borderRadius: 16 },
+  trackImage: { width: 55, height: 55, borderRadius: 12, backgroundColor: '#222' },
+  trackInfo: { flex: 1, marginLeft: 15 },
+  trackTitle: { color: '#fff', fontSize: 17, fontWeight: 'bold' },
+  trackArtist: { color: '#1DB954', fontSize: 14, fontWeight: '600', marginTop: 4 }
 });
