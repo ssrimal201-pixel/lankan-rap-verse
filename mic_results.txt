@@ -1,0 +1,2 @@
+app/(tabs)/index.tsx:214:            style={styles.micActionBtn}
+app/(tabs)/index.tsx:256:  micActionBtn: { backgroundColor: '#1a1a1a', padding: 10, borderRadius: 20, borderWidth: 1, borderColor: '#00FFCC' },
