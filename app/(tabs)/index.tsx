@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search, Info } from 'lucide-react-native';
-import rapData from '../data/rapVerses.json';
 
 export default function HomeScreen() {
   const router = useRouter();
