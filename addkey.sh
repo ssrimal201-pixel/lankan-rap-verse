@@ -1,4 +1,2 @@
-git add .
-git commit -m "Cleaned up karaoke UI and updated home screen"
-git push origin main
-echo "GIT_SYNC_DONE" > sync_status.txt
+sed -i 's/\.\.\/\.\.\/data\/rapVerses\.json/\.\.\/data\/rapVerses\.json/g' app/\(tabs\)/index.tsx
+npx expo start --clear
