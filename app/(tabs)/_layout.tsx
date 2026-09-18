@@ -1,26 +1,22 @@
 import { Tabs } from "expo-router";
 import { Home, Mic2, Heart, Send } from "lucide-react-native";
 import React from "react";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#1DB954",
-        tabBarInactiveTintColor: "#666666",
-        
-        // 1. මෙන්න මේ ලයින් එක false කරන්න
-        headerShown: false, 
-
+        headerShown: false,
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.subText,
         tabBarStyle: {
-          backgroundColor: "#0a0a0a",
-          borderTopColor: "#1a1a1a",
+          backgroundColor: theme.tabBarBg,
+          borderTopColor: theme.border,
           borderTopWidth: 1,
         },
-        headerStyle: {
-          backgroundColor: "#0a0a0a",
-        },
-        headerTintColor: "#ffffff",
       }}
     >
       <Tabs.Screen
